@@ -11,10 +11,13 @@ namespace DTI_Challenge.Application
     public class MatchApplication : IMatchApplication
     {
         public IMemoryCache _memoryCache { get; set; }
+        public string msg { get; set; }
+
         public MatchApplication(IMemoryCache memoryCache)
         {
             _memoryCache = memoryCache;
         }
+
         public MatchResume Start()
         {
             MatchResume matchResume = new MatchResume();
@@ -22,6 +25,7 @@ namespace DTI_Challenge.Application
             {
                 Id = Guid.NewGuid(),
             };
+
 
             matchControl.Random = new Random();
             int playerId = matchControl.Random.Next(0, 3);
@@ -35,6 +39,8 @@ namespace DTI_Challenge.Application
                 matchControl.FirstPlayer = matchControl.playerTwo.PlayerLetter;
             }
 
+            MapeamentoIncial(matchControl);
+
             matchResume.Id = matchControl.Id;
             matchResume.FirstPlayer = matchControl.FirstPlayer;
 
@@ -43,8 +49,39 @@ namespace DTI_Challenge.Application
             return matchResume;
         }
 
+
+        /// <summary>
+        /// Mapeio todos os campos possiveis nesse game
+        /// </summary>
+        /// <param name="matchControl"></param>
+        private void MapeamentoIncial(MatchControl matchControl)
+        {
+            matchControl.GamePositions = new Dictionary<int, MatchMap>();
+            int i = 0;
+
+            for (int a = 0; a <= 2; a++)
+            {
+                for (int j = 0; j <= 2; j++)
+                {
+                    matchControl.GamePositions.TryAdd(i++, new MatchMap
+                    {
+                        X = a,
+                        Y = j
+                    });
+                }
+
+            }
+
+        }
+
+        /// <summary>
+        /// Validações 
+        /// </summary>
+        /// <param name="matchMoviment"></param>
+        /// <returns></returns>
         public string MatchMoviment(MatchMoviment matchMoviment)
         {
+            this.msg = "Jogada Efetuada com Sucesso";
 
             MatchResume matchResume = (MatchResume)_memoryCache.Get(matchMoviment.Id.ToString());
             if (matchResume == null)
@@ -59,55 +96,41 @@ namespace DTI_Challenge.Application
             if (!ValidaTurno(matchControl, matchMoviment))
                 return "Não é turno do jogador";
 
-            _memoryCache.Remove("MatchControl");
-
             Jogada(matchMoviment, matchResume, matchControl);
 
-            return "Jogada Feita com Sucesso";
+            return msg;
         }
 
         private void Jogada(MatchMoviment matchMoviment, MatchResume matchResume, MatchControl matchControl)
         {
 
+
             if (matchMoviment.Player.Equals("X"))
             {
-                matchControl.PlayerXPositions = (Dictionary<int, Dictionary<int, int>>)_memoryCache.Get("PlayerXPositions");
+                MatchControl match = (MatchControl)_memoryCache.Get("MatchControl");
 
-                if (matchMoviment.Round.Equals(1) || matchControl.PlayerXPositions == null)
+                MatchMap matchMap = new MatchMap()
                 {
-                    matchControl.PlayerXPositions = new Dictionary<int, Dictionary<int, int>>();
-                }
-                _memoryCache.Remove("PlayerXPositions");
+                    X = matchMoviment.Position.x,
+                    Y = matchMoviment.Position.y
+                };
 
-                Dictionary<int, int> keyValuePairs = new Dictionary<int, int>();
+                ValidarJogada(match, matchMap, matchMoviment);
 
-                keyValuePairs.Add(matchMoviment.Position.x, matchMoviment.Position.y);
-                matchControl.PlayerXPositions.Add(matchMoviment.Round, keyValuePairs);
-
-                _memoryCache.Set("PlayerXPositions", matchControl.PlayerXPositions);
             }
             else if (matchMoviment.Player.Equals("O"))
             {
-                matchControl.PlayerOPositions = (Dictionary<int, Dictionary<int, int>>)_memoryCache.Get("PlayerXPositions");
+                MatchControl match = (MatchControl)_memoryCache.Get("MatchControl");
 
-                if (matchMoviment.Round.Equals(1) || matchControl.PlayerOPositions == null)
+                MatchMap matchMap = new MatchMap()
                 {
-                    matchControl.PlayerOPositions = new Dictionary<int, Dictionary<int, int>>();
-
-                }
-                _memoryCache.Remove("PlayerOPositions");
-
-
-                Dictionary<int, int> keyValuePairs = new Dictionary<int, int>();
-
-                keyValuePairs.Add(matchMoviment.Position.x, matchMoviment.Position.y);
-                matchControl.PlayerOPositions.Add(matchMoviment.Round, keyValuePairs);
-
-                _memoryCache.Set("PlayerOPositions", matchControl.PlayerOPositions);
-
+                    X = matchMoviment.Position.x,
+                    Y = matchMoviment.Position.y
+                };
+                ValidarJogada(match, matchMap, matchMoviment);
             }
 
-            ValidaJogada(matchMoviment, matchControl);
+
 
             matchControl.LastPlayer = matchMoviment.Player;
 
@@ -115,11 +138,41 @@ namespace DTI_Challenge.Application
 
         }
 
+        private void ValidarJogada(MatchControl match, MatchMap matchMap, MatchMoviment matchMoviment)
+        {
+            foreach (var item in match.GamePositions)
+            {
+                if (item.Value.X.Equals(matchMap.X) && item.Value.Y.Equals(matchMap.Y))
+                {
+                    int key = item.Key;
+
+                    if (item.Value.Player != null)
+                    {
+                        this.msg = "Campo já foi selecionado em outra rodada";
+                        break;
+                    }
+                    match.GamePositions[key].Player = matchMoviment.Player;
+
+                    break;
+                }
+            }
+            
+        }
+
+
+        /// <summary>
+        /// Metodo que carrega e exclui o Cache
+        /// </summary>
+        /// <param name="matchMoviment"></param>
+        /// <param name="matchResume"></param>
+        /// <param name="matchControl"></param>
         private void CachePrepare(MatchMoviment matchMoviment, MatchResume matchResume, MatchControl matchControl)
         {
             _memoryCache.Remove(matchMoviment.Id.ToString());
 
             _memoryCache.Set(matchMoviment.Id.ToString(), matchResume);
+
+            _memoryCache.Remove("MatchControl");
 
             _memoryCache.Set("MatchControl", matchControl);
 
@@ -141,14 +194,14 @@ namespace DTI_Challenge.Application
             return true;
         }
 
-        private bool ValidaJogada(MatchMoviment matchMoviment, MatchControl matchControl)
-        {
-            int x = matchMoviment.Position.x;
-            int y = matchMoviment.Position.y;
+        //private bool ValidaJogada(MatchMoviment matchMoviment, MatchControl matchControl)
+        //{
+        //    int x = matchMoviment.Position.x;
+        //    int y = matchMoviment.Position.y;
 
 
 
 
-        }
+        //}
     }
 }

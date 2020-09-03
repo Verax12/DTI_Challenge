@@ -36,13 +36,10 @@ namespace DTI_Challenge.Models
 
         public string LastPlayer { get; set; }
 
-        public Dictionary<int, Dictionary<int, int>> PlayerXPositions { get; set; }
-        public Dictionary<int, Dictionary<int, int>> PlayerOPositions { get; set; }
-
-
-
+        public Dictionary<int, MatchMap> GamePositions { get; set; }
 
         public EndGame Winner { get; set; }
+
     }
 
 }
