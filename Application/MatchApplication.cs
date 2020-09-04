@@ -57,6 +57,7 @@ namespace DTI_Challenge.Application
         private void MapeamentoIncial(MatchControl matchControl)
         {
             matchControl.GamePositions = new Dictionary<int, MatchMap>();
+            matchControl.GameVictoryPossibilities = new Dictionary<int, List<MatchMap>>();
             int i = 0;
 
             for (int a = 0; a <= 2; a++)
@@ -69,8 +70,43 @@ namespace DTI_Challenge.Application
                         Y = j
                     });
                 }
-
             }
+
+            matchControl.GameVictoryPossibilities.Add(1, new List<MatchMap>
+                {
+                    new MatchMap { X = 0, Y = 2 },
+                    new MatchMap { X = 0, Y = 1 },
+                    new MatchMap { X = 0, Y = 0 }
+                });
+
+            matchControl.GameVictoryPossibilities.Add(2, new List<MatchMap>
+                {
+                   new MatchMap { X = 1, Y = 2 },
+                   new MatchMap { X = 1, Y = 1 },
+                   new MatchMap { X = 1, Y = 0 }
+                });
+
+            matchControl.GameVictoryPossibilities.Add(3, new List<MatchMap>
+                {
+                   new MatchMap { X = 2, Y = 2 },
+                   new MatchMap { X = 2, Y = 1 },
+                   new MatchMap { X = 2, Y = 0 }
+                });
+
+            matchControl.GameVictoryPossibilities.Add(4, new List<MatchMap>
+                {
+                   new MatchMap { X = 0, Y = 2 },
+                   new MatchMap { X = 1, Y = 1 },
+                   new MatchMap { X = 2, Y = 0 }
+                });
+
+            matchControl.GameVictoryPossibilities.Add(5, new List<MatchMap>
+                {
+                   new MatchMap { X = 2, Y = 2 },
+                   new MatchMap { X = 1, Y = 1 },
+                   new MatchMap { X = 0, Y = 0 }
+                });
+
 
         }
 
@@ -103,44 +139,23 @@ namespace DTI_Challenge.Application
 
         private void Jogada(MatchMoviment matchMoviment, MatchResume matchResume, MatchControl matchControl)
         {
+            if (ValidarJogada(matchControl, matchMoviment))
+                CachePrepare(matchMoviment, matchResume, matchControl);
 
-
-            if (matchMoviment.Player.Equals("X"))
-            {
-                MatchControl match = (MatchControl)_memoryCache.Get("MatchControl");
-
-                MatchMap matchMap = new MatchMap()
-                {
-                    X = matchMoviment.Position.x,
-                    Y = matchMoviment.Position.y
-                };
-
-                ValidarJogada(match, matchMap, matchMoviment);
-
-            }
-            else if (matchMoviment.Player.Equals("O"))
-            {
-                MatchControl match = (MatchControl)_memoryCache.Get("MatchControl");
-
-                MatchMap matchMap = new MatchMap()
-                {
-                    X = matchMoviment.Position.x,
-                    Y = matchMoviment.Position.y
-                };
-                ValidarJogada(match, matchMap, matchMoviment);
-            }
-
-
-
-            matchControl.LastPlayer = matchMoviment.Player;
-
-            CachePrepare(matchMoviment, matchResume, matchControl);
+            if (matchMoviment.Round >= 3)
+                ValidaJogada(matchControl);
 
         }
 
-        private void ValidarJogada(MatchControl match, MatchMap matchMap, MatchMoviment matchMoviment)
+        private bool ValidarJogada(MatchControl matchControl, MatchMoviment matchMoviment)
         {
-            foreach (var item in match.GamePositions)
+            MatchMap matchMap = new MatchMap()
+            {
+                X = matchMoviment.Position.x,
+                Y = matchMoviment.Position.y
+            };
+
+            foreach (var item in matchControl.GamePositions)
             {
                 if (item.Value.X.Equals(matchMap.X) && item.Value.Y.Equals(matchMap.Y))
                 {
@@ -149,14 +164,15 @@ namespace DTI_Challenge.Application
                     if (item.Value.Player != null)
                     {
                         this.msg = "Campo já foi selecionado em outra rodada";
-                        break;
+                        return false;
                     }
-                    match.GamePositions[key].Player = matchMoviment.Player;
+                    matchControl.GamePositions[key].Player = matchMoviment.Player;
 
                     break;
+
                 }
             }
-            
+            return true;
         }
 
 
@@ -168,6 +184,8 @@ namespace DTI_Challenge.Application
         /// <param name="matchControl"></param>
         private void CachePrepare(MatchMoviment matchMoviment, MatchResume matchResume, MatchControl matchControl)
         {
+            matchControl.LastPlayer = matchMoviment.Player;
+
             _memoryCache.Remove(matchMoviment.Id.ToString());
 
             _memoryCache.Set(matchMoviment.Id.ToString(), matchResume);
@@ -194,14 +212,22 @@ namespace DTI_Challenge.Application
             return true;
         }
 
-        //private bool ValidaJogada(MatchMoviment matchMoviment, MatchControl matchControl)
-        //{
-        //    int x = matchMoviment.Position.x;
-        //    int y = matchMoviment.Position.y;
+        private void ValidaJogada(MatchControl matchControl)
+        {
+            List<MatchMap> matchPositionX = new List<MatchMap>();
+            List<MatchMap> matchPositionO = new List<MatchMap>();
 
-
-
-
-        //}
+            foreach (var item in matchControl.GamePositions)
+            {
+                if (item.Value.Player.Equals("X"))
+                {
+                    matchPositionX.Add(item.Value);
+                } 
+                else if (item.Value.Player.Equals("O"))
+                {
+                    matchPositionO.Add(item.Value);
+                }
+            }
+        }
     }
 }

@@ -37,6 +37,7 @@ namespace DTI_Challenge.Models
         public string LastPlayer { get; set; }
 
         public Dictionary<int, MatchMap> GamePositions { get; set; }
+        public Dictionary<int, List<MatchMap>> GameVictoryPossibilities { get; set; }
 
         public EndGame Winner { get; set; }
 
