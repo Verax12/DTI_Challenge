@@ -143,7 +143,7 @@ namespace DTI_Challenge.Application
                 CachePrepare(matchMoviment, matchResume, matchControl);
 
             if (matchMoviment.Round >= 3)
-                ValidaJogada(matchControl);
+                VerificaVitoria(matchControl);
 
         }
 
@@ -212,7 +212,12 @@ namespace DTI_Challenge.Application
             return true;
         }
 
-        private void ValidaJogada(MatchControl matchControl)
+
+        /// <summary>
+        /// Metodo Incompleto, Falta validar a vitoria
+        /// </summary>
+        /// <param name="matchControl"></param>
+        private void VerificaVitoria(MatchControl matchControl)
         {
             List<MatchMap> matchPositionX = new List<MatchMap>();
             List<MatchMap> matchPositionO = new List<MatchMap>();
