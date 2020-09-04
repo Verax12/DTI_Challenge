@@ -39,7 +39,7 @@ namespace DTI_Challenge.Controllers
         }
 
         [HttpPost]
-        [Route("{id}/movement")]
+        [Route("/movement")]
         public async Task<ActionResult> Movement(MatchMoviment match)
         {
             string msg = _matchApplication.MatchMoviment(match);

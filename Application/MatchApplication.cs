@@ -140,10 +140,14 @@ namespace DTI_Challenge.Application
         private void Jogada(MatchMoviment matchMoviment, MatchResume matchResume, MatchControl matchControl)
         {
             if (ValidarJogada(matchControl, matchMoviment))
+            {
                 CachePrepare(matchMoviment, matchResume, matchControl);
 
-            if (matchMoviment.Round >= 3)
-                VerificaVitoria(matchControl);
+                if (matchMoviment.Round >= 5)
+                {
+                    VerificaVitoria(matchControl);
+                }
+            }
 
         }
 
@@ -222,17 +226,42 @@ namespace DTI_Challenge.Application
             List<MatchMap> matchPositionX = new List<MatchMap>();
             List<MatchMap> matchPositionO = new List<MatchMap>();
 
+            Dictionary<int, List<MatchMap>> keyValuePairsX = new Dictionary<int, List<MatchMap>>();
+            Dictionary<int, List<MatchMap>> keyValuePairO = new Dictionary<int, List<MatchMap>>();
+
             foreach (var item in matchControl.GamePositions)
             {
-                if (item.Value.Player.Equals("X"))
+                if (item.Value.Player != null && item.Value.Player.Equals("X"))
                 {
                     matchPositionX.Add(item.Value);
-                } 
-                else if (item.Value.Player.Equals("O"))
+                }
+                else if (item.Value.Player != null && item.Value.Player.Equals("O"))
                 {
                     matchPositionO.Add(item.Value);
+
                 }
             }
+
+            ///Metodo de Validação incompleto
+            ///falta finalziar a comparação dos resultados
+
+            //if (matchPositionX.Count >= 3)
+            //{
+            //    keyValuePairsX.Add(1, matchPositionX);
+
+            //    var winnerX = matchControl.GameVictoryPossibilities.DictionaryEquals(keyValuePairsX);
+            //}
+            //else if (matchPositionO.Count >= 3)
+            //{
+
+            //    keyValuePairO.Add(1, matchPositionO);
+            //    var winnerO = matchControl.GameVictoryPossibilities.DictionaryEquals(keyValuePairO);
+
+            //}
+
         }
+
+
+
     }
 }
